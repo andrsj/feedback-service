@@ -18,6 +18,7 @@ type Router struct {
 	logger logger.Logger
 
 	cacheMiddleware func(next http.Handler) http.Handler
+	jwtMiddleware func(next http.Handler) http.Handler
 }
 
 func New(cache cache.Cache, logger logger.Logger) *Router {
@@ -26,24 +27,29 @@ func New(cache cache.Cache, logger logger.Logger) *Router {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
+	jwtMiddleware := middlewares.JWTMiddleware(logger)
 	cacheMiddleware := middlewares.CacheMiddleware(cache)
 
 	return &Router{
-		router: router,
-		logger: logger.Named("router"),
+		router:          router,
+		logger:          logger.Named("router"),
 		cacheMiddleware: cacheMiddleware,
+		jwtMiddleware:   jwtMiddleware,
 	}
 }
 
 func (r *Router) Register(handler handlers.Handlers) {
 	r.logger.Info("Registering handlers", nil)
-	r.router.Get("/", handler.Status)
+	r.router.With(r.jwtMiddleware).Get("/", handler.Status)
+
+	// TODO fix routers
+	r.router.Get("/token", handler.Token)
 
 	r.router.Group(
 		func(router chi.Router) {
 			// router.Use(r.cacheMiddleware)
 			router.Get("/feedbacks", handler.GetAllFeedback)
-			router.Get("/feedback/{id}", handler.GetFeedback)
+			router.With(r.cacheMiddleware).Get("/feedback/{id}", handler.GetFeedback)
 		},
 	)
 	r.router.Post("/feedback", handler.CreateFeedback)

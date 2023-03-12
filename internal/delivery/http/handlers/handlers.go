@@ -10,6 +10,7 @@ import (
 
 type Handlers interface {
 	Status(w http.ResponseWriter, r *http.Request)
+	Token(w http.ResponseWriter, r *http.Request)
 	GetFeedback(w http.ResponseWriter, r *http.Request)
 	GetAllFeedback(w http.ResponseWriter, r *http.Request)
 	CreateFeedback(w http.ResponseWriter, r *http.Request)
