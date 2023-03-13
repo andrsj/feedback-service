@@ -1,0 +1,29 @@
+linters:
+  enable-all: true
+  disable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golint
+
+issues:
+  exclude:
+    - unexported-return
+    - found a struct that contains a context.Context field
+    - Function \'.*\' is too long
+    - use of internal package
+    - parameter name 'w|r' is too short for the scope of its usage
+
+  exclude-rules:
+    linters:
+      - ireturn
+    text: Named returns interface
+
+run:
+  timeout: 2m
+  issues-exit-code: 0
+  go: '1.18.10'
+
+output:
+  uniq-by-line: false
