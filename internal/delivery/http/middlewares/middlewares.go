@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/andrsj/feedback-service/internal/infrastructure/cache"
 	"github.com/andrsj/feedback-service/pkg/logger"
-
 )
 
 const (
@@ -40,20 +40,31 @@ func CacheMiddleware(cache cache.Cache) func(next http.Handler) http.Handler {
 				return
 			}
 
-			// TODO Header
-
 			cacheKey := r.URL.String()
-			if val, ok := cache.Get(cacheKey); ok {
+			val, cacheExist, err := cache.Get(cacheKey)
+			if err != nil {
+				handleError(w, fmt.Errorf("caching problem: %w", err), http.StatusInternalServerError)
+
+				return
+			}
+
+			if cacheExist {
+				w.Header().Set("X-Cache", "Cached")
+				w.Header().Set("content-type", "application/json")
 				w.Write(val) //nolint
 
 				return
 			}
 
+			w.Header().Set("X-Cache", "None")
 			rw := NewResponseWriter(w, http.StatusProcessing)
 			next.ServeHTTP(rw, r)
 
 			if rw.Status() == http.StatusOK {
-				cache.Set(cacheKey, rw.Body.Bytes())
+				err = cache.Set(cacheKey, rw.Body.Bytes())
+				if err != nil {
+					handleError(w, err, http.StatusInternalServerError)
+				}
 			}
 		})
 	}
@@ -68,27 +79,27 @@ func JWTMiddleware(log logger.Logger) func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			tokenStr, err := validateHeaders(r.Header)
 			if err != nil {
-				errMSG = "Wrong authorization header"
+				errMSG = "wrong authorization header"
 				log.Error(errMSG, logger.M{"err": err})
-				http.Error(w, errMSG, http.StatusBadRequest)
+				handleError(w, fmt.Errorf("%s: %w", errMSG, err), http.StatusBadRequest)
 
 				return
 			}
 
 			token, err := parseToken(tokenStr)
 			if err != nil {
-				errMSG = "Wrong token authorization"
-				log.Error(errMSG, nil)
-				http.Error(w, errMSG, http.StatusUnauthorized)
+				errMSG = "wrong token authorization"
+				log.Error(errMSG, logger.M{"err": err})
+				handleError(w, fmt.Errorf("%s: %w", errMSG, err), http.StatusUnauthorized)
 
 				return
 			}
 
 			err = validateToken(token, r)
 			if err != nil {
-				errMSG = "Validating token error"
+				errMSG = "validating token error"
 				log.Error(errMSG, logger.M{"err": err})
-				http.Error(w, errMSG, http.StatusUnauthorized)
+				handleError(w, fmt.Errorf("%s: %w", errMSG, err), http.StatusUnauthorized)
 
 				return
 			}
@@ -96,6 +107,12 @@ func JWTMiddleware(log logger.Logger) func(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func handleError(w http.ResponseWriter, err error, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}) //nolint:errchkjson
 }
 
 func parseToken(tokenStr string) (*jwt.Token, error) {

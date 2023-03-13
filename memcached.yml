@@ -1,0 +1,7 @@
+version: '3.9'
+services:
+  memcached:
+    image: memcached:latest
+    container_name: mymemcached
+    ports:
+      - "${MEMCACHED_PORT}:${MEMCACHED_PORT}"

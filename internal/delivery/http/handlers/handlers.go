@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -35,4 +36,12 @@ func (h *handlers) Status(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Ok")
+}
+
+func (h *handlers) handleError(w http.ResponseWriter, statusCode int, err error) {
+	h.logger.Error("handler error", logger.M{"err": err})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}) //nolint:errchkjson
 }

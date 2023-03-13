@@ -1,3 +1,4 @@
 .vscode/
 postgresData/
+kafkaData/
 build/

@@ -8,8 +8,8 @@ import (
 )
 
 type cache struct {
-	mu    sync.RWMutex
-	items map[string][]byte
+	mu     sync.RWMutex
+	items  map[string][]byte
 	logger logger.Logger
 }
 
@@ -24,9 +24,9 @@ func New(logger logger.Logger) *cache {
 }
 
 // Set adds a new item to the cache.
-func (c *cache) Set(key string, value []byte) {
+func (c *cache) Set(key string, value []byte) error {
 	c.logger.Info("Setting values", logger.M{
-		"key": key,
+		"key":   key,
 		"value": string(value),
 	})
 
@@ -34,20 +34,21 @@ func (c *cache) Set(key string, value []byte) {
 	defer c.mu.Unlock()
 
 	c.items[key] = value
+
+	return nil
 }
 
 // Get retrieves an item from the cache.
-func (c *cache) Get(key string) ([]byte, bool) {
+func (c *cache) Get(key string) ([]byte, bool, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
 	value, keyExists := c.items[key]
 	c.logger.Info("Getting values", logger.M{
-		"key": key,
+		"key":   key,
 		"value": string(value),
 		"exist": keyExists,
 	})
 
-
-	return value, keyExists 
+	return value, keyExists, nil
 }

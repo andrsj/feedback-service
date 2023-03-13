@@ -12,7 +12,6 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 
 	"github.com/andrsj/feedback-service/pkg/logger"
-
 )
 
 const (
@@ -33,7 +32,6 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 		minutes int64
 		role    string
 		err     error
-		errMSG  string
 	)
 
 	queryParams := r.URL.Query()
@@ -42,18 +40,14 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 
 	minutes, err = checkMinutes(queryParams)
 	if err != nil {
-		errMSG = "Error while checking minutes"
-		h.logger.Error(errMSG, logger.M{"err": err})
-		http.Error(w, errMSG, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, fmt.Errorf("error while checking minutes: %w", err))
 
 		return
 	}
 
 	role, err = checkRole(queryParams)
 	if err != nil {
-		errMSG = "Error while checking role"
-		h.logger.Error(errMSG, logger.M{"err": err})
-		http.Error(w, errMSG, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, fmt.Errorf("error while checking role: %w", err))
 
 		return
 	}
@@ -65,9 +59,7 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 
 	token, err := generateJWTToken(minutes, role)
 	if err != nil {
-		errMSG = "Can't create a token :("
-		h.logger.Error(errMSG, logger.M{"err": err})
-		http.Error(w, errMSG, http.StatusInternalServerError)
+		h.handleError(w, http.StatusInternalServerError, fmt.Errorf("can't create a token: %w", err))
 
 		return
 	}

@@ -10,6 +10,8 @@ import (
 	"github.com/andrsj/feedback-service/pkg/logger"
 )
 
+// TODO VALIDATE INPUT
+
 type Service interface {
 	Create(feedback *models.FeedbackInput) (string, error)
 	GetByID(feedbackID string) (*models.Feedback, error)
@@ -90,8 +92,6 @@ func (s *feedbackService) GetAll() ([]*models.Feedback, error) {
 	)
 
 	s.logger.Info("Getting All feedbacks", nil)
-
-	// TODO validation and business logic
 
 	feedbacks, err = s.repo.GetAll()
 	if err != nil {
