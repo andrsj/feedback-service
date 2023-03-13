@@ -7,6 +7,7 @@ import (
 
 	"github.com/andrsj/feedback-service/internal/domain/models"
 	"github.com/andrsj/feedback-service/internal/domain/repositories"
+	"github.com/andrsj/feedback-service/internal/infrastructure/broker/kafka"
 	"github.com/andrsj/feedback-service/pkg/logger"
 )
 
@@ -19,37 +20,52 @@ type Service interface {
 }
 
 type feedbackService struct {
-	logger logger.Logger
-	repo   repositories.FeedbackRepository
+	logger   logger.Logger
+	repo     repositories.FeedbackRepository
+	producer kafka.Producer
 }
 
 var _ Service = (*feedbackService)(nil)
 
-func New(feedbackRepository repositories.FeedbackRepository, logger logger.Logger) *feedbackService {
+func New(feedbackRepository repositories.FeedbackRepository, producer kafka.Producer, logger logger.Logger) *feedbackService {
 	return &feedbackService{
-		logger: logger.Named("service"),
-		repo:   feedbackRepository,
+		logger:   logger.Named("service"),
+		repo:     feedbackRepository,
+		producer: producer,
 	}
 }
 
 func (s *feedbackService) Create(feedback *models.FeedbackInput) (string, error) {
 	var (
-		feedbackID string
+		feedbackID uuid.UUID
 		err        error
 	)
 
-	s.logger.Info("Creating feedback", logger.M{"feedback": feedback.CustomerName})
+	s.logger.Info("Creating feedback", logger.M{"feedback": feedback})
 
 	feedbackID, err = s.repo.Create(feedback)
 	if err != nil {
 		s.logger.Error("Creating feedback error", logger.M{"err": err})
-
+		
 		return "", fmt.Errorf("creating feedback error: %w", err)
 	}
+	
+	err = s.producer.SendMessage(&models.Feedback{
+		ID:           feedbackID,
+		CustomerName: feedback.CustomerName,
+		Email:        feedback.Email,
+		FeedbackText: feedback.FeedbackText,
+		Source:       feedback.Source,
+	})
+	if err != nil {
+		s.logger.Error("broker sending feedback error", logger.M{"err": err})
 
-	s.logger.Info("Successfully created feedback", logger.M{"feedbackID": feedbackID})
+		return "", fmt.Errorf("broker sending feedback error: %w", err)
+	}
 
-	return feedbackID, nil
+	s.logger.Info("Successfully created feedback", logger.M{"feedbackID": feedbackID.String()})
+
+	return feedbackID.String(), nil
 }
 
 func (s *feedbackService) GetByID(feedbackID string) (*models.Feedback, error) {

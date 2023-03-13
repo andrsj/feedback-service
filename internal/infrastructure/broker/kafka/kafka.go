@@ -13,39 +13,41 @@ import (
 
 const frequency = 500
 
-type Broker interface {
-	SendMessage(models.Feedback) error
+type Producer interface {
+	SendMessage(*models.Feedback) error
 	Close() error
 }
 
-type apacheKafkaBroker struct {
+type apacheKafkaProducer struct {
 	logger    logger.Logger
 	producer  sarama.SyncProducer
 	topicName string
 }
 
-var _ Broker = (*apacheKafkaBroker)(nil)
+var _ Producer = (*apacheKafkaProducer)(nil)
 
-func New(log logger.Logger, addrs []string, topicName string) *apacheKafkaBroker {
+func New(log logger.Logger, addr string, topicName string) (*apacheKafkaProducer, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.Producer.Compression = sarama.CompressionSnappy
 	config.Producer.Flush.Frequency = frequency * time.Millisecond
 
-	producer, err := sarama.NewSyncProducer(addrs, config)
+	producer, err := sarama.NewSyncProducer([]string{addr}, config)
 	if err != nil {
-		log.Fatal("Failed to create Kafka producer", logger.M{"err": err})
+		log.Error("Failed to create Kafka producer", logger.M{"err": err})
+
+		return nil, fmt.Errorf("can't setting up Kafka Producer: %w", err)
 	}
 
-	return &apacheKafkaBroker{
+	return &apacheKafkaProducer{
 		logger:    log,
 		producer:  producer,
 		topicName: topicName,
-	}
+	}, nil
 }
 
-func (a *apacheKafkaBroker) SendMessage(feedback models.Feedback) error {
+func (a *apacheKafkaProducer) SendMessage(feedback *models.Feedback) error {
 	feedbackJSON, err := json.Marshal(feedback)
 	if err != nil {
 		a.logger.Error("Failed to marshal Feedback to JSON", logger.M{"err": err})
@@ -63,7 +65,7 @@ func (a *apacheKafkaBroker) SendMessage(feedback models.Feedback) error {
 	if err != nil {
 		a.logger.Error("Failed to send Kafka message", logger.M{"err": err})
 
-		return fmt.Errorf("failed to send Kafka message :%w", err)
+		return fmt.Errorf("failed to send Kafka message: %w", err)
 	}
 
 	a.logger.Info("Sent Kafka message", logger.M{
@@ -74,7 +76,7 @@ func (a *apacheKafkaBroker) SendMessage(feedback models.Feedback) error {
 	return nil
 }
 
-func (a *apacheKafkaBroker) Close() error {
+func (a *apacheKafkaProducer) Close() error {
 	if err := a.producer.Close(); err != nil {
 		return fmt.Errorf("closing error: %w", err)
 	}

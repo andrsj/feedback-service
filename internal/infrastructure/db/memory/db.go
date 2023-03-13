@@ -28,7 +28,7 @@ func New(logger logger.Logger) *inMemoryFeedbackRepository {
 	}
 }
 
-func (r *inMemoryFeedbackRepository) Create(feedback *models.FeedbackInput) (string, error) {
+func (r *inMemoryFeedbackRepository) Create(feedback *models.FeedbackInput) (uuid.UUID, error) {
 	feedbackID := uuid.New()
 
 	r.logger.Info("Creating feedback", logger.M{"feedbackID": feedbackID})
@@ -50,7 +50,7 @@ func (r *inMemoryFeedbackRepository) Create(feedback *models.FeedbackInput) (str
 	
 	r.logger.Info("Returning feedbackID for successfully saved feedback", logger.M{"feedbackID": feedbackID})
 	
-	return feedbackID.String(), nil
+	return feedbackID, nil
 }
 
 func (r *inMemoryFeedbackRepository) GetByID(feedbackID uuid.UUID) (*models.Feedback, error) {

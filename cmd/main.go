@@ -18,8 +18,7 @@ func main() {
 
 	err := godotenv.Load("config.env")
 	if err != nil {
-		msg := fmt.Sprintf("Error loading .env file: %s", err)
-		zap.Fatal(msg, nil)
+		zap.Fatal("error loading .env file", log.M{"err": err})
 	}
 
 	// Postgresql config
@@ -41,23 +40,33 @@ func main() {
 	memcachedSecondsLive, err := strconv.Atoi(memcachedSecondsLiveStr)
 
 	if err != nil {
-		zap.Fatal("Can't convert the Memcached live time seconds into integer", log.M{"err": err})
+		zap.Fatal("can't convert the Memcached live time seconds into integer", log.M{"err": err})
 	}
+
+	// Kafka config
+	kafkaHost := fmt.Sprintf(
+		"%s:%s",
+		os.Getenv("KAFKA_HOST"),
+		os.Getenv("KAFKA_PORT"),
+	)
+	kafkaTopic := os.Getenv("KAFKA_TOPIC")
 
 	// App creating
 	app, err := app.New(&app.Params{
 		DsnDB:            dsn,
-		CacheSecondsLive: int32(memcachedSecondsLive), //nolint:gosec
+		CacheSecondsLive: int32(memcachedSecondsLive),
 		CacheHost:        memcachedHost,
+		KafkaHost:        kafkaHost,
+		KafkaTopic:       kafkaTopic,
 		Logger:           zap,
 	})
 	if err != nil {
-		zap.Fatal("Can't configure the app", log.M{"err": err})
+		zap.Fatal("can't configure the app", log.M{"err": err})
 	}
 
 	// App starting
 	err = app.Start()
 	if err != nil {
-		zap.Fatal("Can't start the application", log.M{"err": err})
+		zap.Fatal("can't start the application", log.M{"err": err})
 	}
 }

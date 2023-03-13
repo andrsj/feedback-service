@@ -40,7 +40,7 @@ func NewFeedbackRepository(db *gorm.DB, logger log.Logger) (*feedbackRepository,
 	}, nil
 }
 
-func (r *feedbackRepository) Create(feedbackInput *models.FeedbackInput) (string, error) {
+func (r *feedbackRepository) Create(feedbackInput *models.FeedbackInput) (uuid.UUID, error) {
 	r.logger.Info("Creating 'Feedback'", nil)
 
 	var (
@@ -62,12 +62,12 @@ func (r *feedbackRepository) Create(feedbackInput *models.FeedbackInput) (string
 	if err != nil {
 		r.logger.Error("Failed to create feedback into DB", log.M{"err": err})
 
-		return "", fmt.Errorf("failed to create feedback into DB: %w", err)
+		return uuid.Nil, fmt.Errorf("failed to create feedback into DB: %w", err)
 	}
 
 	r.logger.Info("Feedback created successfully", log.M{"id": feedbackID})
 
-	return feedbackID.String(), nil
+	return feedbackID, nil
 }
 
 func (r *feedbackRepository) GetByID(feedbackID uuid.UUID) (*models.Feedback, error) {

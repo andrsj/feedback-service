@@ -7,7 +7,7 @@ import (
 )
 
 type FeedbackRepository interface {
-	Create(feedback *models.FeedbackInput) (feedbackID string, err error)
+	Create(feedback *models.FeedbackInput) (feedbackID uuid.UUID, err error)
 	GetByID(feedbackID uuid.UUID) (feedback *models.Feedback, err error)
 	GetAll() (feedbacks []*models.Feedback, err error)
 }

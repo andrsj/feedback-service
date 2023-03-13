@@ -10,6 +10,7 @@ import (
 	"github.com/andrsj/feedback-service/internal/delivery/http/handlers"
 	"github.com/andrsj/feedback-service/internal/delivery/http/router"
 	"github.com/andrsj/feedback-service/internal/delivery/http/server"
+	"github.com/andrsj/feedback-service/internal/infrastructure/broker/kafka"
 	"github.com/andrsj/feedback-service/internal/infrastructure/cache/memcached"
 	repo "github.com/andrsj/feedback-service/internal/infrastructure/db/gorm"
 	"github.com/andrsj/feedback-service/internal/services/feedback"
@@ -25,6 +26,8 @@ type Params struct {
 	DsnDB            string
 	CacheSecondsLive int32
 	CacheHost        string
+	KafkaHost 		 string
+	KafkaTopic		 string
 	Logger           log.Logger
 }
 
@@ -49,7 +52,14 @@ func New(params *Params) (*App, error) {
 		return nil, fmt.Errorf("can't up repository: %w", err)
 	}
 
-	service := feedback.New(feedbackRepo, logger)
+	broker, err := kafka.New(logger, params.KafkaHost, params.KafkaTopic)
+	if err != nil {
+		logger.Error("Can't up broker", log.M{"err": err})
+
+		return nil, fmt.Errorf("can't up broker: %w", err)
+	}
+
+	service := feedback.New(feedbackRepo, broker ,logger)
 	handlers := handlers.New(service, logger)
 
 	cache := memcached.New(params.CacheHost, params.CacheSecondsLive, logger)

@@ -1,0 +1,39 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:latest
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./postgresData:/var/lib/postgresql/data
+    ports:
+      - "${DATABASE_PORT}:${DATABASE_PORT}"
+
+  memcached:
+    image: memcached:latest
+    container_name: memcached
+    ports:
+      - "${MEMCACHED_PORT}:${MEMCACHED_PORT}"
+
+  kafka:
+    image: 'bitnami/kafka:latest'
+    container_name: kafka
+    ports:
+      - '${KAFKA_PORT}:${KAFKA_PORT}'
+    environment:
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${KAFKA_HOST}:${KAFKA_PORT} # specifies the advertised Kafka listener
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 # specifies the Zookeeper connection string for Kafka
+      - ALLOW_PLAINTEXT_LISTENER=yes # allows plain text listeners for Kafka
+      - KAFKA_CREATE_TOPICS="${KAFKA_TOPIC}:1:1" # specifies a topic to create for Kafka
+    depends_on:
+      - zookeeper
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes # allows anonymous logins for Zookeeper
+    ports:
+      - '2181:2181'
