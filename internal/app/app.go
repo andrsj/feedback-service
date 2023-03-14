@@ -1,8 +1,13 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -81,10 +86,26 @@ func New(params *Params) (*App, error) {
 func (a *App) Start() error {
 	a.logger.Info("Starting the application", log.M{"address": a.server.Addr})
 
-	err := a.server.ListenAndServe()
-	if err != nil {
-		return fmt.Errorf("can't listen and serve: %w", err)
+	osSignals := make(chan os.Signal, 1)
+	signal.Notify(osSignals, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		if err := a.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			a.logger.Error("Server error", log.M{"error": err.Error()})
+		}
+	}()
+
+	sig := <-osSignals
+	a.logger.Info("Received signal", log.M{"signal": sig})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := a.server.Shutdown(ctx); err != nil {
+		a.logger.Error("Server shutdown error", log.M{"error": err.Error()})
 	}
+
+	a.logger.Info("Application stopped", nil)
 
 	return nil
 }

@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -48,21 +49,27 @@ type Handlers interface {
 
 func (r *Router) Register(handler Handlers) {
 	r.logger.Info("Registering handlers", nil)
-	r.router.With(r.jwtMiddleware).Get("/", handler.Status)
 
-	// TODO fix routers
 	r.router.Get("/token", handler.Token)
-
+	
 	r.router.Group(
 		func(router chi.Router) {
-			// router.Use(r.cacheMiddleware)
+			router.Use(r.cacheMiddleware)
+			router.Use(r.jwtMiddleware)
+			
+			router.Get("/", handler.Status)
 			router.Get("/feedbacks", handler.GetAllFeedback)
-			// router.Get("/feedback/{id}", handler.GetFeedback)
-			router.With(r.cacheMiddleware).Get("/feedback/{id}", handler.GetFeedback)
+			router.Get("/feedback/{id}", handler.GetFeedback)
 			router.Get("/p-feedbacks", handler.GetPageFeedbacks)
+			
+			router.Post("/feedback", handler.CreateFeedback)
 		},
 	)
-	r.router.Post("/feedback", handler.CreateFeedback)
+
+	r.router.Get("/l", func(w http.ResponseWriter, _ *http.Request) {
+		time.Sleep(10 * time.Second)
+		w.Write([]byte("Ok"))
+	})
 
 	err := chi.Walk(
 		r.router,
