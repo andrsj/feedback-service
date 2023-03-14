@@ -15,7 +15,7 @@ var (
 )
 
 // GetFeedback GET /feedback/{id}.
-func (h *handlers) GetFeedback(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) GetFeedback(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -43,7 +43,7 @@ func (h *handlers) GetFeedback(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllFeedback GET /feedbacks.
-func (h *handlers) GetAllFeedback(w http.ResponseWriter, _ *http.Request) {
+func (h *Handlers) GetAllFeedback(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -63,7 +63,7 @@ func (h *handlers) GetAllFeedback(w http.ResponseWriter, _ *http.Request) {
 }
 
 // CreateFeedback POST /feedback.
-func (h *handlers) CreateFeedback(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) CreateFeedback(w http.ResponseWriter, r *http.Request) {
 	var feedback models.FeedbackInput
 
 	w.Header().Set("Content-Type", "application/json")

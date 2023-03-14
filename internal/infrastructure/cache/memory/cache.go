@@ -7,16 +7,16 @@ import (
 	"github.com/andrsj/feedback-service/pkg/logger"
 )
 
-type cache struct {
+type Cache struct {
 	mu     sync.RWMutex
 	items  map[string][]byte
 	logger logger.Logger
 }
 
-var _ c.Cache = (*cache)(nil)
+var _ c.Cache = (*Cache)(nil)
 
-func New(logger logger.Logger) *cache {
-	return &cache{
+func New(logger logger.Logger) *Cache {
+	return &Cache{
 		mu:     sync.RWMutex{},
 		items:  make(map[string][]byte),
 		logger: logger.Named("cache"),
@@ -24,7 +24,7 @@ func New(logger logger.Logger) *cache {
 }
 
 // Set adds a new item to the cache.
-func (c *cache) Set(key string, value []byte) error {
+func (c *Cache) Set(key string, value []byte) error {
 	c.logger.Info("Setting values", logger.M{
 		"key":   key,
 		"value": string(value),
@@ -39,7 +39,7 @@ func (c *cache) Set(key string, value []byte) error {
 }
 
 // Get retrieves an item from the cache.
-func (c *cache) Get(key string) ([]byte, bool, error) {
+func (c *Cache) Get(key string) ([]byte, bool, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 

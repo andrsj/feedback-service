@@ -10,23 +10,24 @@ import (
 	"github.com/andrsj/feedback-service/pkg/logger"
 )
 
-type memcachedCache struct {
+type Memcached struct {
 	logger        logger.Logger
 	client        *memcache.Client
 	secondsToLive int32
 }
 
-var _ cache.Cache = (*memcachedCache)(nil)
+// Check that actual implementation fits the interface.
+var _ cache.Cache = (*Memcached)(nil)
 
-func New(host string, secondsToLive int32, logger logger.Logger) *memcachedCache {
-	return &memcachedCache{
+func New(host string, secondsToLive int32, logger logger.Logger) *Memcached {
+	return &Memcached{
 		logger:        logger.Named("memcached"),
 		client:        memcache.New(host),
 		secondsToLive: secondsToLive,
 	}
 }
 
-func (c *memcachedCache) Get(key string) ([]byte, bool, error) {
+func (c *Memcached) Get(key string) ([]byte, bool, error) {
 	item, err := c.client.Get(key)
 	if err != nil {
 		if errors.Is(err, memcache.ErrCacheMiss) {
@@ -45,8 +46,8 @@ func (c *memcachedCache) Get(key string) ([]byte, bool, error) {
 	return item.Value, true, nil
 }
 
-func (c *memcachedCache) Set(key string, value []byte) error {
-	//nolint
+func (c *Memcached) Set(key string, value []byte) error {
+	//nolint:exhaustivestruct,exhaustruct
 	err := c.client.Set(&memcache.Item{
 		Key:        key,
 		Value:      value,

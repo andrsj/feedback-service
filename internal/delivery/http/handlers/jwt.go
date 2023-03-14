@@ -27,7 +27,7 @@ var (
 	errMinutesParam = errors.New("invalid minutes parameter")
 )
 
-func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) Token(w http.ResponseWriter, r *http.Request) {
 	var (
 		minutes int64
 		role    string

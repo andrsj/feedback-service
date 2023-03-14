@@ -8,23 +8,20 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/andrsj/feedback-service/internal/domain/models"
-	"github.com/andrsj/feedback-service/internal/domain/repositories"
 	log "github.com/andrsj/feedback-service/pkg/logger"
 
 )
 
-type feedbackRepository struct {
+type FeedbackRepository struct {
 	db     *gorm.DB
 	logger log.Logger
 }
 
-var _ repositories.FeedbackRepository = (*feedbackRepository)(nil)
-
 //nolint:varnamelen
-func NewFeedbackRepository(db *gorm.DB, logger log.Logger) (*feedbackRepository, error) {
+func NewFeedbackRepository(db *gorm.DB, logger log.Logger) (*FeedbackRepository, error) {
 	logger = logger.Named("gormORM")
 	
-	//nolint
+	//nolint:exhaustivestruct,exhaustruct
 	err := db.AutoMigrate(models.Feedback{})
 	if err != nil {
 		logger.Error("Can't Auto Migrate the 'Feedback' model", log.M{"err": err})
@@ -34,13 +31,13 @@ func NewFeedbackRepository(db *gorm.DB, logger log.Logger) (*feedbackRepository,
 
 	logger.Info("Successfully migrated", nil)
 
-	return &feedbackRepository{
+	return &FeedbackRepository{
 		db:     db,
 		logger: logger,
 	}, nil
 }
 
-func (r *feedbackRepository) Create(feedbackInput *models.FeedbackInput) (uuid.UUID, error) {
+func (r *FeedbackRepository) Create(feedbackInput *models.FeedbackInput) (uuid.UUID, error) {
 	r.logger.Info("Creating 'Feedback'", nil)
 
 	var (
@@ -70,7 +67,7 @@ func (r *feedbackRepository) Create(feedbackInput *models.FeedbackInput) (uuid.U
 	return feedbackID, nil
 }
 
-func (r *feedbackRepository) GetByID(feedbackID uuid.UUID) (*models.Feedback, error) {
+func (r *FeedbackRepository) GetByID(feedbackID uuid.UUID) (*models.Feedback, error) {
 	var feedback models.Feedback
 
 	r.logger.Info("Getting 'Feedback' by ID", log.M{
@@ -92,7 +89,7 @@ func (r *feedbackRepository) GetByID(feedbackID uuid.UUID) (*models.Feedback, er
 	return &feedback, nil
 }
 
-func (r *feedbackRepository) GetAll() ([]*models.Feedback, error) {
+func (r *FeedbackRepository) GetAll() ([]*models.Feedback, error) {
 	var feedbacks []*models.Feedback
 
 	r.logger.Info("Get all 'Feedback's", nil)

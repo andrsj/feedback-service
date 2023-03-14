@@ -7,7 +7,7 @@ import (
 
 )
 
-// Custom ResponeWriter for handling data
+// Custom ResponseWriter for handling data
 // after the next.ServeHTTP is done.
 type ResponseWriter struct {
 	http.ResponseWriter
@@ -34,6 +34,7 @@ func (rw *ResponseWriter) Write(b []byte) (int, error) {
 	return rw.ResponseWriter.Write(b) //nolint:wrapcheck
 }
 
+// `interfacer` says that http.ResponseWrite can be replaced by io.Writer.
 //nolint:interfacer
 func (rw *ResponseWriter) WriteTo(w http.ResponseWriter) error {
 	_, err := w.Write(rw.Body.Bytes())

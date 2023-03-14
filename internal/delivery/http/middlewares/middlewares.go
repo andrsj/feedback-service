@@ -51,7 +51,7 @@ func CacheMiddleware(cache cache.Cache) func(next http.Handler) http.Handler {
 			if cacheExist {
 				w.Header().Set("X-Cache", "Cached")
 				w.Header().Set("content-type", "application/json")
-				w.Write(val) //nolint
+				w.Write(val) //nolint:errcheck
 
 				return
 			}

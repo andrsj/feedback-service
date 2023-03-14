@@ -13,20 +13,13 @@ import (
 
 const frequency = 500
 
-type Producer interface {
-	SendMessage(*models.Feedback) error
-	Close() error
-}
-
-type apacheKafkaProducer struct {
+type Producer struct {
 	logger    logger.Logger
 	producer  sarama.SyncProducer
 	topicName string
 }
 
-var _ Producer = (*apacheKafkaProducer)(nil)
-
-func New(log logger.Logger, addr string, topicName string) (*apacheKafkaProducer, error) {
+func New(log logger.Logger, addr string, topicName string) (*Producer, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.RequiredAcks = sarama.WaitForAll
@@ -40,14 +33,14 @@ func New(log logger.Logger, addr string, topicName string) (*apacheKafkaProducer
 		return nil, fmt.Errorf("can't setting up Kafka Producer: %w", err)
 	}
 
-	return &apacheKafkaProducer{
+	return &Producer{
 		logger:    log,
 		producer:  producer,
 		topicName: topicName,
 	}, nil
 }
 
-func (a *apacheKafkaProducer) SendMessage(feedback *models.Feedback) error {
+func (a *Producer) SendMessage(feedback *models.Feedback) error {
 	feedbackJSON, err := json.Marshal(feedback)
 	if err != nil {
 		a.logger.Error("Failed to marshal Feedback to JSON", logger.M{"err": err})
@@ -55,7 +48,7 @@ func (a *apacheKafkaProducer) SendMessage(feedback *models.Feedback) error {
 		return fmt.Errorf("failed to marshal Feedback to JSON: %w", err)
 	}
 
-	//nolint
+	//nolint:exhaustivestruct,exhaustruct
 	message := &sarama.ProducerMessage{
 		Topic: a.topicName,
 		Value: sarama.StringEncoder(feedbackJSON),
@@ -76,7 +69,7 @@ func (a *apacheKafkaProducer) SendMessage(feedback *models.Feedback) error {
 	return nil
 }
 
-func (a *apacheKafkaProducer) Close() error {
+func (a *Producer) Close() error {
 	if err := a.producer.Close(); err != nil {
 		return fmt.Errorf("closing error: %w", err)
 	}

@@ -34,10 +34,10 @@ type Params struct {
 func New(params *Params) (*App, error) {
 	logger := params.Logger.Named("app")
 
-	//nolint
+	//nolint:varnamelen
 	db, err := gorm.Open(
 		postgres.Open(params.DsnDB),
-		&gorm.Config{},
+		&gorm.Config{}, //nolint:exhaustivestruct,exhaustruct
 	)
 	if err != nil {
 		logger.Error("Can't connect to DB", log.M{"err": err, "dsn": params.DsnDB})

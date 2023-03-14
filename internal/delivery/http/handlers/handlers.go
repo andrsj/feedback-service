@@ -5,40 +5,40 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/andrsj/feedback-service/internal/domain/models"
 	"github.com/andrsj/feedback-service/internal/services/feedback"
 	"github.com/andrsj/feedback-service/pkg/logger"
 )
 
-type Handlers interface {
-	Status(w http.ResponseWriter, r *http.Request)
-	Token(w http.ResponseWriter, r *http.Request)
-	GetFeedback(w http.ResponseWriter, r *http.Request)
-	GetAllFeedback(w http.ResponseWriter, r *http.Request)
-	CreateFeedback(w http.ResponseWriter, r *http.Request)
+type Service interface {
+	Create(feedback *models.FeedbackInput) (string, error)
+	GetByID(feedbackID string) (*models.Feedback, error)
+	GetAll() ([]*models.Feedback, error)
 }
 
-func New(service feedback.Service, logger logger.Logger) *handlers {
-	return &handlers{
+// Check if the actual implementation fits the interface. 
+var _ Service = (*feedback.Service)(nil)
+
+type Handlers struct {
+	logger          logger.Logger
+	feedbackService Service
+}
+
+func New(service Service, logger logger.Logger) *Handlers {
+	return &Handlers{
 		logger:          logger.Named("handlers"),
 		feedbackService: service,
 	}
 }
 
-type handlers struct {
-	logger          logger.Logger
-	feedbackService feedback.Service
-}
-
-var _ Handlers = (*handlers)(nil)
-
-func (h *handlers) Status(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) Status(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Hit status endpoint", nil)
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Ok")
 }
 
-func (h *handlers) handleError(w http.ResponseWriter, statusCode int, err error) {
+func (h *Handlers) handleError(w http.ResponseWriter, statusCode int, err error) {
 	h.logger.Error("handler error", logger.M{"err": err})
 
 	w.Header().Set("Content-Type", "application/json")

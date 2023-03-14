@@ -8,27 +8,24 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/andrsj/feedback-service/internal/domain/models"
-	"github.com/andrsj/feedback-service/internal/domain/repositories"
 	"github.com/andrsj/feedback-service/pkg/logger"
 )
 
-type inMemoryFeedbackRepository struct {
+type FeedbackRepository struct {
 	mu        sync.Mutex
 	feedbacks map[string]*models.Feedback
 	logger    logger.Logger
 }
 
-var _ repositories.FeedbackRepository = (*inMemoryFeedbackRepository)(nil)
-
-func New(logger logger.Logger) *inMemoryFeedbackRepository {
-	return &inMemoryFeedbackRepository{
+func New(logger logger.Logger) *FeedbackRepository {
+	return &FeedbackRepository{
 		mu:        sync.Mutex{},
 		feedbacks: make(map[string]*models.Feedback),
 		logger:    logger.Named("memoryDB"),
 	}
 }
 
-func (r *inMemoryFeedbackRepository) Create(feedback *models.FeedbackInput) (uuid.UUID, error) {
+func (r *FeedbackRepository) Create(feedback *models.FeedbackInput) (uuid.UUID, error) {
 	feedbackID := uuid.New()
 
 	r.logger.Info("Creating feedback", logger.M{"feedbackID": feedbackID})
@@ -53,7 +50,7 @@ func (r *inMemoryFeedbackRepository) Create(feedback *models.FeedbackInput) (uui
 	return feedbackID, nil
 }
 
-func (r *inMemoryFeedbackRepository) GetByID(feedbackID uuid.UUID) (*models.Feedback, error) {
+func (r *FeedbackRepository) GetByID(feedbackID uuid.UUID) (*models.Feedback, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -71,7 +68,7 @@ func (r *inMemoryFeedbackRepository) GetByID(feedbackID uuid.UUID) (*models.Feed
 	return feedbackOutput, nil
 }
 
-func (r *inMemoryFeedbackRepository) GetAll() ([]*models.Feedback, error) {
+func (r *FeedbackRepository) GetAll() ([]*models.Feedback, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

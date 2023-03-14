@@ -7,7 +7,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/andrsj/feedback-service/internal/delivery/http/handlers"
 	"github.com/andrsj/feedback-service/internal/delivery/http/middlewares"
 	"github.com/andrsj/feedback-service/internal/infrastructure/cache"
 	"github.com/andrsj/feedback-service/pkg/logger"
@@ -38,7 +37,15 @@ func New(cache cache.Cache, logger logger.Logger) *Router {
 	}
 }
 
-func (r *Router) Register(handler handlers.Handlers) {
+type Handlers interface {
+	Status(w http.ResponseWriter, r *http.Request)
+	Token(w http.ResponseWriter, r *http.Request)
+	GetFeedback(w http.ResponseWriter, r *http.Request)
+	GetAllFeedback(w http.ResponseWriter, r *http.Request)
+	CreateFeedback(w http.ResponseWriter, r *http.Request)
+}
+
+func (r *Router) Register(handler Handlers) {
 	r.logger.Info("Registering handlers", nil)
 	r.router.With(r.jwtMiddleware).Get("/", handler.Status)
 

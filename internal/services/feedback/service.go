@@ -6,36 +6,54 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/andrsj/feedback-service/internal/domain/models"
-	"github.com/andrsj/feedback-service/internal/domain/repositories"
 	"github.com/andrsj/feedback-service/internal/infrastructure/broker/kafka"
+	"github.com/andrsj/feedback-service/internal/infrastructure/db/gorm"
+	"github.com/andrsj/feedback-service/internal/infrastructure/db/memory"
 	"github.com/andrsj/feedback-service/pkg/logger"
 )
 
 // TODO VALIDATE INPUT
 
-type Service interface {
-	Create(feedback *models.FeedbackInput) (string, error)
-	GetByID(feedbackID string) (*models.Feedback, error)
-	GetAll() ([]*models.Feedback, error)
+/*
+This is a good practice to separate the interface:
+- FeedbackRepoReader
+- FeedbackRepoWriter
+- FeedbackRepoSearch
+If we want to use only some part of logic.
+*/
+type Repository interface {
+	Create(feedback *models.FeedbackInput) (feedbackID uuid.UUID, err error)
+	GetByID(feedbackID uuid.UUID) (feedback *models.Feedback, err error)
+	GetAll() (feedbacks []*models.Feedback, err error)
 }
 
-type feedbackService struct {
+// Check that actual implementation fits the interface.
+var _ Repository = (*gorm.FeedbackRepository)(nil)
+var _ Repository = (*memory.FeedbackRepository)(nil)
+
+type Producer interface {
+	SendMessage(*models.Feedback) error
+	Close() error
+}
+
+// Check that actual implementation fits the interface.
+var _ Producer = (*kafka.Producer)(nil)
+
+type Service struct {
 	logger   logger.Logger
-	repo     repositories.FeedbackRepository
-	producer kafka.Producer
+	repo     Repository
+	producer Producer
 }
 
-var _ Service = (*feedbackService)(nil)
-
-func New(feedbackRepository repositories.FeedbackRepository, producer kafka.Producer, logger logger.Logger) *feedbackService {
-	return &feedbackService{
+func New(feedbackRepository Repository, producer Producer, logger logger.Logger) *Service {
+	return &Service{
 		logger:   logger.Named("service"),
 		repo:     feedbackRepository,
 		producer: producer,
 	}
 }
 
-func (s *feedbackService) Create(feedback *models.FeedbackInput) (string, error) {
+func (s *Service) Create(feedback *models.FeedbackInput) (string, error) {
 	var (
 		feedbackID uuid.UUID
 		err        error
@@ -50,12 +68,15 @@ func (s *feedbackService) Create(feedback *models.FeedbackInput) (string, error)
 		return "", fmt.Errorf("creating feedback error: %w", err)
 	}
 	
+	//nolint:exhaustivestruct,exhaustruct
 	err = s.producer.SendMessage(&models.Feedback{
 		ID:           feedbackID,
 		CustomerName: feedback.CustomerName,
 		Email:        feedback.Email,
 		FeedbackText: feedback.FeedbackText,
 		Source:       feedback.Source,
+		// I don't specify the createdAt, updatedAt from DB instance
+		// because it's a part of DB logic, not a Kafka.
 	})
 	if err != nil {
 		s.logger.Error("broker sending feedback error", logger.M{"err": err})
@@ -68,7 +89,7 @@ func (s *feedbackService) Create(feedback *models.FeedbackInput) (string, error)
 	return feedbackID.String(), nil
 }
 
-func (s *feedbackService) GetByID(feedbackID string) (*models.Feedback, error) {
+func (s *Service) GetByID(feedbackID string) (*models.Feedback, error) {
 	var (
 		feedback *models.Feedback
 		err      error
@@ -101,7 +122,7 @@ func (s *feedbackService) GetByID(feedbackID string) (*models.Feedback, error) {
 	return feedback, nil
 }
 
-func (s *feedbackService) GetAll() ([]*models.Feedback, error) {
+func (s *Service) GetAll() ([]*models.Feedback, error) {
 	var (
 		feedbacks []*models.Feedback
 		err       error

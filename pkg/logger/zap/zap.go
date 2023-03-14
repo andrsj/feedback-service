@@ -9,8 +9,8 @@ import (
 	"github.com/andrsj/feedback-service/pkg/logger"
 )
 
-func New() *zapLogger {
-	//nolint
+func New() *ZapLogger {
+	//nolint:exhaustivestruct,exhaustruct
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -30,40 +30,40 @@ func New() *zapLogger {
 
 	logger := zap.New(core)
 
-	return &zapLogger{
+	return &ZapLogger{
 		logger: logger,
 	}
 }
 
-type zapLogger struct {
+type ZapLogger struct {
 	logger *zap.Logger
 }
 
-var _ logger.Logger = (*zapLogger)(nil)
+var _ logger.Logger = (*ZapLogger)(nil)
 
-func (l *zapLogger) Named(name string) logger.Logger {
-	return &zapLogger{
+func (l *ZapLogger) Named(name string) logger.Logger {
+	return &ZapLogger{
 		logger: l.logger.Named(name),
 	}
 }
 
-func (l *zapLogger) Debug(message string, args logger.M) {
+func (l *ZapLogger) Debug(message string, args logger.M) {
 	l.logger.Debug(message, toFields(args)...)
 }
 
-func (l *zapLogger) Info(message string, args logger.M) {
+func (l *ZapLogger) Info(message string, args logger.M) {
 	l.logger.Info(message, toFields(args)...)
 }
 
-func (l *zapLogger) Warn(message string, args logger.M) {
+func (l *ZapLogger) Warn(message string, args logger.M) {
 	l.logger.Warn(message, toFields(args)...)
 }
 
-func (l *zapLogger) Error(message string, args logger.M) {
+func (l *ZapLogger) Error(message string, args logger.M) {
 	l.logger.Error(message, toFields(args)...)
 }
 
-func (l *zapLogger) Fatal(message string, args logger.M) {
+func (l *ZapLogger) Fatal(message string, args logger.M) {
 	l.logger.Fatal(message, toFields(args)...)
 }
 

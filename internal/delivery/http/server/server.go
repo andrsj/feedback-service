@@ -8,7 +8,7 @@ import (
 )
 
 func New(router *router.Router) *http.Server {
-	//nolint
+	//nolint:exhaustivestruct,exhaustruct
 	server := &http.Server{
 		Addr:              ":8080",
 		Handler:           router.GetChiMux(),
