@@ -17,7 +17,7 @@ type Router struct {
 	logger logger.Logger
 
 	cacheMiddleware func(next http.Handler) http.Handler
-	jwtMiddleware func(next http.Handler) http.Handler
+	jwtMiddleware   func(next http.Handler) http.Handler
 }
 
 func New(cache cache.Cache, logger logger.Logger) *Router {
@@ -43,6 +43,7 @@ type Handlers interface {
 	GetFeedback(w http.ResponseWriter, r *http.Request)
 	GetAllFeedback(w http.ResponseWriter, r *http.Request)
 	CreateFeedback(w http.ResponseWriter, r *http.Request)
+	GetPageFeedbacks(w http.ResponseWriter, r *http.Request)
 }
 
 func (r *Router) Register(handler Handlers) {
@@ -56,18 +57,20 @@ func (r *Router) Register(handler Handlers) {
 		func(router chi.Router) {
 			// router.Use(r.cacheMiddleware)
 			router.Get("/feedbacks", handler.GetAllFeedback)
+			// router.Get("/feedback/{id}", handler.GetFeedback)
 			router.With(r.cacheMiddleware).Get("/feedback/{id}", handler.GetFeedback)
+			router.Get("/p-feedbacks", handler.GetPageFeedbacks)
 		},
 	)
 	r.router.Post("/feedback", handler.CreateFeedback)
 
 	err := chi.Walk(
-		r.router, 
+		r.router,
 		func(method string, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
-        	r.logger.Info(fmt.Sprintf("%-5s -> %s", method, route), nil)
+			r.logger.Info(fmt.Sprintf("%-5s -> %s", method, route), nil)
 
-        	return nil
-    	},
+			return nil
+		},
 	)
 	if err != nil {
 		panic(err)

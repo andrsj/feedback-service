@@ -14,9 +14,10 @@ type Service interface {
 	Create(feedback *models.FeedbackInput) (string, error)
 	GetByID(feedbackID string) (*models.Feedback, error)
 	GetAll() ([]*models.Feedback, error)
+	GetPage(limit int, next string) ([]*models.Feedback, string, error)
 }
 
-// Check if the actual implementation fits the interface. 
+// Check if the actual implementation fits the interface.
 var _ Service = (*feedback.Service)(nil)
 
 type Handlers struct {

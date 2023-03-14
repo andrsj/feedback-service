@@ -38,9 +38,10 @@ func New(params *Params) (*App, error) {
 	//nolint:varnamelen
 	db, err := gorm.Open(
 		postgres.Open(params.DsnDB),
+		//nolint:exhaustivestruct,exhaustruct
 		&gorm.Config{
 			Logger: gormLogger.Default.LogMode(gormLogger.Info),
-		}, //nolint:exhaustivestruct,exhaustruct
+		}, 
 	)
 	if err != nil {
 		logger.Error("Can't connect to DB", log.M{"err": err, "dsn": params.DsnDB})
