@@ -42,6 +42,8 @@ func (r *FeedbackRepository) Create(feedbackInput *models.FeedbackInput) (uuid.U
 
 	var (
 		feedback   *models.Feedback
+		// Potential mistake: WE CAN'T BE SURE THAT DB does not have the same ID.
+		// But for test task I ignore it for simplify
 		feedbackID = uuid.New()
 	)
 

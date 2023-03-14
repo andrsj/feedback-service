@@ -12,8 +12,6 @@ import (
 	"github.com/andrsj/feedback-service/pkg/logger"
 )
 
-// TODO VALIDATE INPUT
-
 /*
 This is a good practice to separate the interface:
 - FeedbackRepoReader
@@ -58,6 +56,13 @@ func (s *Service) Create(feedback *models.FeedbackInput) (string, error) {
 		feedbackID uuid.UUID
 		err        error
 	)
+
+	err = Validate(feedback)
+	if err != nil {
+		s.logger.Error("validating feedback error", logger.M{"err": err})
+		
+		return "", fmt.Errorf("validating feedback error: %w", err)
+	}
 
 	s.logger.Info("Creating feedback", logger.M{"feedback": feedback})
 
