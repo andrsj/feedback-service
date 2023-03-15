@@ -49,6 +49,7 @@ func (h *Handlers) handleError(w http.ResponseWriter, statusCode int, err error)
 	_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}) //nolint:errchkjson
 }
 
+// ChatGPT's generated code for testing graceful shutdown.
 func (h *Handlers) FakeLongWork(w http.ResponseWriter, r *http.Request) {
 	queryValues := r.URL.Query()
 

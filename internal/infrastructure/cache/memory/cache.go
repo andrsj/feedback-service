@@ -7,6 +7,8 @@ import (
 	"github.com/andrsj/feedback-service/pkg/logger"
 )
 
+// ChatGPT generated code for 'Mocking' that used but not in tests :)
+
 type Cache struct {
 	mu     sync.RWMutex
 	items  map[string][]byte

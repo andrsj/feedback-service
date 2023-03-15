@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// ChatGPT's tip for creating separate model for input.
 type FeedbackInput struct {
 	CustomerName string `json:"customer_name"` //nolint:tagliatelle
 	Email        string `json:"email"`

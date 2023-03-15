@@ -75,6 +75,7 @@ func (r *Router) Register(handler Handlers) {
 	// Testing router for checking Graceful Shutdown.
 	r.router.Get("/l", handler.FakeLongWork)
 
+	// ChatGPT's generated code for logging registered <Method: URLs>
 	err := chi.Walk(
 		r.router,
 		func(method string, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {

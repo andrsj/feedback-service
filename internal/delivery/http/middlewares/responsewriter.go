@@ -7,6 +7,8 @@ import (
 
 )
 
+// ChatGPT's generated package for handling Response for Cache Middleware
+
 // Custom ResponseWriter for handling data
 // after the next.ServeHTTP is done.
 type ResponseWriter struct {

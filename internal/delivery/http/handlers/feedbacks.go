@@ -34,8 +34,7 @@ func (h *Handlers) GetFeedback(w http.ResponseWriter, r *http.Request) {
 
 	feedbackID := chi.URLParam(r, "id")
 	if feedbackID == "" {
-		err := errIDParamIsMissing
-		h.handleError(w, http.StatusBadRequest, err)
+		h.handleError(w, http.StatusBadRequest, errIDParamIsMissing)
 
 		return
 	}
@@ -119,6 +118,8 @@ func (h *Handlers) GetPageFeedbacks(w http.ResponseWriter, r *http.Request) {
 	limit, nextInput, err = validatePaginator(r.URL.Query())
 	if err != nil {
 		h.handleError(w, http.StatusBadRequest, err)
+
+		return
 	}
 
 	feedbacks, nextOutput, err = h.feedbackService.GetPage(limit, nextInput)

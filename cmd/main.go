@@ -17,6 +17,7 @@ func main() {
 	zap := zap.New()
 
 	var configFile string
+	
 	flag.StringVar(&configFile, "c", "", "path to config file (required)")
 	flag.Parse()
 
