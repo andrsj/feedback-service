@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -22,6 +23,8 @@ import (
 	"github.com/andrsj/feedback-service/internal/services/feedback"
 	log "github.com/andrsj/feedback-service/pkg/logger"
 )
+
+const timeoutShutdown = 5
 
 type App struct {
 	server *http.Server
@@ -90,15 +93,16 @@ func (a *App) Start() error {
 	signal.Notify(osSignals, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		if err := a.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := a.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			a.logger.Error("Server error", log.M{"error": err.Error()})
 		}
 	}()
 
 	sig := <-osSignals
+
 	a.logger.Info("Received signal", log.M{"signal": sig})
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutShutdown*time.Second)
 	defer cancel()
 
 	if err := a.server.Shutdown(ctx); err != nil {

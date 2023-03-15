@@ -80,7 +80,6 @@ func (h *Handlers) CreateFeedback(w http.ResponseWriter, r *http.Request) {
 	var feedback models.FeedbackInput
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
 
 	err := json.NewDecoder(r.Body).Decode(&feedback)
 	if err != nil {
@@ -102,6 +101,8 @@ func (h *Handlers) CreateFeedback(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	w.WriteHeader(http.StatusCreated)
 }
 
 // GetPageFeedbacks GET /p-feedbacks.

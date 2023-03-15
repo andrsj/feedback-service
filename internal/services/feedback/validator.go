@@ -3,7 +3,7 @@ package feedback
 import (
 	"errors"
 	"net/mail"
-	"net/url"
+	"regexp"
 
 	"github.com/andrsj/feedback-service/internal/domain/models"
 )
@@ -11,6 +11,8 @@ import (
 var (
 	errValidEmail = errors.New("invalid email address")
 	errValidURL = errors.New("invalid source URL")
+
+	regexURL = regexp.MustCompile(`^(https?|ftp)://[^\s/$.?#].[^\s]*$`)
 )
 
 func Validate(feedback *models.FeedbackInput) error {
@@ -19,8 +21,7 @@ func Validate(feedback *models.FeedbackInput) error {
 		return errValidEmail
 	}
 
-	_, err = url.ParseRequestURI(feedback.Source)
-	if err != nil {
+	if !regexURL.MatchString(feedback.Source) {
 		return errValidURL
 	}
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/joho/godotenv"
+	// "github.com/joho/godotenv"
 
 	"github.com/andrsj/feedback-service/internal/app"
 	log "github.com/andrsj/feedback-service/pkg/logger"
@@ -16,19 +16,33 @@ import (
 func main() {
 	zap := zap.New()
 
-	err := godotenv.Load("config.env")
-	if err != nil {
-		zap.Fatal("error loading .env file", log.M{"err": err})
-	}
+	// TODO add check .env file logic
+	// err := godotenv.Load("config.env")
+	// if err != nil {
+	// 	zap.Fatal("error loading .env file", log.M{"err": err})
+	// }
 
 	// Postgresql config
+	dbHost := os.Getenv("DATABASE_HOST")
+	dbPort := os.Getenv("DATABASE_PORT")
+	dbUser := os.Getenv("POSTGRES_USER")
+	dbPass := os.Getenv("POSTGRES_PASSWORD")
+	dbName := os.Getenv("POSTGRES_DB")
+
+	zap.Info("DB Configuration", log.M{
+		"host": dbHost,
+		"port": dbPort,
+		"user": dbUser,
+		"pass": dbPass,
+		"name": dbName,
+	})
+
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		os.Getenv("DATABASE_HOST"),
-		os.Getenv("DATABASE_PORT"),
-		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_DB"))
+		dbHost, dbPort, dbUser, dbPass, dbName,
+	)
+
+	zap.Info("DB URL", log.M{"dsn": dsn})
 
 	// Memcached config
 	memcachedHost := fmt.Sprintf(
@@ -39,24 +53,37 @@ func main() {
 	memcachedSecondsLiveStr := os.Getenv("MEMCACHED_LIVE_TIME")
 	memcachedSecondsLive, err := strconv.Atoi(memcachedSecondsLiveStr)
 
+	zap.Info("Memcached data", log.M{
+		"URL": memcachedHost,
+		"live time": memcachedSecondsLiveStr,
+	})
+
 	if err != nil {
 		zap.Fatal("can't convert the Memcached live time seconds into integer", log.M{"err": err})
 	}
 
 	// Kafka config
-	kafkaHost := fmt.Sprintf(
+	kafkaHost := os.Getenv("KAFKA_HOST")
+	kafkaPort := os.Getenv("KAFKA_PORT")
+	kafkaURL := fmt.Sprintf(
 		"%s:%s",
-		os.Getenv("KAFKA_HOST"),
-		os.Getenv("KAFKA_PORT"),
+		kafkaHost,
+		kafkaPort,
 	)
 	kafkaTopic := os.Getenv("KAFKA_TOPIC")
+	
+	zap.Info("Apache Kafka Configuration", log.M{
+		"host": kafkaHost,
+		"port": kafkaPort,
+		"topic": kafkaTopic,
+	})
 
 	// App creating
 	app, err := app.New(&app.Params{
 		DsnDB:            dsn,
 		CacheSecondsLive: int32(memcachedSecondsLive),
 		CacheHost:        memcachedHost,
-		KafkaHost:        kafkaHost,
+		KafkaHost:        kafkaURL,
 		KafkaTopic:       kafkaTopic,
 		Logger:           zap,
 	})

@@ -3,7 +3,6 @@ package router
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -45,31 +44,36 @@ type Handlers interface {
 	GetAllFeedback(w http.ResponseWriter, r *http.Request)
 	CreateFeedback(w http.ResponseWriter, r *http.Request)
 	GetPageFeedbacks(w http.ResponseWriter, r *http.Request)
+	FakeLongWork(w http.ResponseWriter, r *http.Request)
 }
 
 func (r *Router) Register(handler Handlers) {
 	r.logger.Info("Registering handlers", nil)
 
+	// Status checker.
+	r.router.Get("/", handler.Status)
+	
+	// Token generation.
 	r.router.Get("/token", handler.Token)
 	
+	// No cache all feedbacks.
+	r.router.With(r.jwtMiddleware).Get("/feedbacks", handler.GetAllFeedback)
 	r.router.Group(
 		func(router chi.Router) {
 			router.Use(r.cacheMiddleware)
 			router.Use(r.jwtMiddleware)
 			
-			router.Get("/", handler.Status)
-			router.Get("/feedbacks", handler.GetAllFeedback)
+			// Specific ID.
 			router.Get("/feedback/{id}", handler.GetFeedback)
+			// Paginated cursor list of feedbacks.
 			router.Get("/p-feedbacks", handler.GetPageFeedbacks)
-			
+			// Create feedback.
 			router.Post("/feedback", handler.CreateFeedback)
 		},
 	)
 
-	r.router.Get("/l", func(w http.ResponseWriter, _ *http.Request) {
-		time.Sleep(10 * time.Second)
-		w.Write([]byte("Ok"))
-	})
+	// Testing router for checking Graceful Shutdown.
+	r.router.Get("/l", handler.FakeLongWork)
 
 	err := chi.Walk(
 		r.router,

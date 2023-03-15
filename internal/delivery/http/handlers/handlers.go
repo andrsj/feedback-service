@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/andrsj/feedback-service/internal/domain/models"
 	"github.com/andrsj/feedback-service/internal/services/feedback"
@@ -45,4 +47,18 @@ func (h *Handlers) handleError(w http.ResponseWriter, statusCode int, err error)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}) //nolint:errchkjson
+}
+
+func (h *Handlers) FakeLongWork(w http.ResponseWriter, r *http.Request) {
+	queryValues := r.URL.Query()
+
+	sleepTime, err := strconv.Atoi(queryValues.Get("time"))
+	if err != nil || sleepTime <= 0 {
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Invalid time value"}) //nolint:errchkjson
+		
+		return
+	}
+	
+	time.Sleep(time.Duration(sleepTime) * time.Second)
+	w.Write([]byte("Ok")) //nolint:errcheck
 }

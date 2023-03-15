@@ -20,11 +20,32 @@ type Producer struct {
 }
 
 func New(log logger.Logger, addr string, topicName string) (*Producer, error) {
+	log = log.Named("kafka")
+
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.Producer.Compression = sarama.CompressionSnappy
 	config.Producer.Flush.Frequency = frequency * time.Millisecond
+
+	// Check if the TOPIC exists by ClusterAdmin.
+	admin, err := sarama.NewClusterAdmin([]string{addr}, config) 
+	if err != nil {
+		log.Error("failed to enter Kafka admin", logger.M{"err": err})
+
+		return nil, fmt.Errorf("failed to enter Kafka admin: %w", err)
+	}
+
+	topicList, err := admin.DescribeTopics([]string{topicName})
+	if err != nil {
+		log.Error("failed to get the topics from Kafka", logger.M{"err": err})
+
+		return nil, fmt.Errorf("failed to get the topics from Kafka: %w", err)
+	}
+
+	for _, topicDesc := range topicList {
+		log.Info("Topic found", logger.M{"topic": topicDesc.Name})
+	}
 
 	producer, err := sarama.NewSyncProducer([]string{addr}, config)
 	if err != nil {
