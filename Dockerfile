@@ -30,4 +30,4 @@ RUN go build -v -o ./server ./cmd/main.go
 
 EXPOSE 8080
 
-CMD ["./server"]
+CMD ["./server", "-c", "docker.env"]

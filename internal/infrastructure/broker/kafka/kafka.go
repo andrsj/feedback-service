@@ -28,28 +28,30 @@ func New(log logger.Logger, addr string, topicName string) (*Producer, error) {
 	config.Producer.Compression = sarama.CompressionSnappy
 	config.Producer.Flush.Frequency = frequency * time.Millisecond
 
-	// Check if the TOPIC exists by ClusterAdmin.
-	admin, err := sarama.NewClusterAdmin([]string{addr}, config) 
+	// Check list of topics which exist.
+	brokers := []string{addr}
+	
+	client, err := sarama.NewClient(brokers, config)
 	if err != nil {
-		log.Error("failed to enter Kafka admin", logger.M{"err": err})
-
-		return nil, fmt.Errorf("failed to enter Kafka admin: %w", err)
+		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
 
-	topicList, err := admin.DescribeTopics([]string{topicName})
+	topics, err := client.Topics()
 	if err != nil {
-		log.Error("failed to get the topics from Kafka", logger.M{"err": err})
-
-		return nil, fmt.Errorf("failed to get the topics from Kafka: %w", err)
+		return nil, fmt.Errorf("failed to get topics: %w", err)
 	}
 
-	for _, topicDesc := range topicList {
-		log.Info("Topic found", logger.M{"topic": topicDesc.Name})
+	for _, topic := range topics {
+		log.Info("Topic", logger.M{"topic": topic})
 	}
 
 	producer, err := sarama.NewSyncProducer([]string{addr}, config)
 	if err != nil {
-		log.Error("Failed to create Kafka producer", logger.M{"err": err})
+		log.Error("Failed to create Kafka producer", logger.M{
+			"err": err,
+			"addr": addr,
+			"topic": topicName,
+		})
 
 		return nil, fmt.Errorf("can't setting up Kafka Producer: %w", err)
 	}

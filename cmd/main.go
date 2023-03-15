@@ -1,26 +1,34 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
 
-	// "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 
 	"github.com/andrsj/feedback-service/internal/app"
 	log "github.com/andrsj/feedback-service/pkg/logger"
 	zap "github.com/andrsj/feedback-service/pkg/logger/zap"
-
 )
 
 func main() {
 	zap := zap.New()
 
-	// TODO add check .env file logic
-	// err := godotenv.Load("config.env")
-	// if err != nil {
-	// 	zap.Fatal("error loading .env file", log.M{"err": err})
-	// }
+	var configFile string
+	flag.StringVar(&configFile, "c", "", "path to config file (required)")
+	flag.Parse()
+
+	if configFile == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	err := godotenv.Load(configFile)
+	if err != nil {
+		zap.Fatal("error loading .env file", log.M{"err": err})
+	}
 
 	// Postgresql config
 	dbHost := os.Getenv("DATABASE_HOST")
