@@ -8,7 +8,7 @@ Your task is to create a simple microservice for processing customer feedback da
 
 1. Create a Go microservice with the following endpoints:
 
-   * POST /feedback: allows the user to submit a new feedback item. The endpoint should accept JSON in the following format:
+   * ✅ POST /feedback: allows the user to submit a new feedback item. The endpoint should accept JSON in the following format:
 
    ```json
    {
@@ -19,33 +19,33 @@ Your task is to create a simple microservice for processing customer feedback da
    }
    ```
 
-   > The microservice should validate the input data, create a unique identifier for the feedback item, save the item in the PostgreSQL database, and publish it to the Kafka topic.
+   > ✅ The microservice should validate the input data, create a unique identifier for the feedback item, save the item in the PostgreSQL database, and publish it to the Kafka topic.
 
-   * GET /feedback/{id}: allows the user to retrieve a specific feedback item by its identifier. The microservice should first check the Memcached cache for the item. If the item is not in the cache, it should retrieve it from the PostgreSQL database and store it in the cache for future requests.
+   * ✅ GET /feedback/{id}: allows the user to retrieve a specific feedback item by its identifier. The microservice should first check the Memcached cache for the item. If the item is not in the cache, it should retrieve it from the PostgreSQL database and store it in the cache for future requests.
 
 2. Use the following technology stack: (if needed for the task):
-   * Go
-   * PostgreSQL for data storage
-   * Kafka for message publishing
-   * Memcached for caching
-   * JavaScript and React for the interface
-   * Microservice communication via HTTP
-   * JWT for authentication
+   * ✅ Go
+   * ✅ PostgreSQL for data storage
+   * ✅ Kafka for message publishing
+   * ✅ Memcached for caching
+   * ❌ JavaScript and React for the interface
+   * ✅ Microservice communication via HTTP
+   * ✅ JWT for authentication
 
-3. The microservice should return appropriate error messages if the endpoint is used incorrectly or if there are issues with the data.
+3. ✅ The microservice should return appropriate error messages if the endpoint is used incorrectly or if there are issues with the data.
 
-4. You should use any relevant libraries or frameworks that are convenient for you.
+4. ✅ You should use any relevant libraries or frameworks that are convenient for you.
 
 ### Bonus points
 
-* Implement pagination for the /feedback endpoint to limit the number of results returned.
-* Add unit tests for the microservice endpoints.
-* Implement authentication and authorization using JWT.
-* Use Docker to containerize the microservice.
+* ✅ Implement pagination for the /feedback endpoint to limit the number of results returned.
+* ❌ Add unit tests for the microservice endpoints.
+* ✅ Implement authentication and authorization using JWT.
+* ✅ Use Docker to containerize the microservice.
 
 ### Submission
 
-Please provide the source code for your solution, including instructions for configuration and running the program.
+✅ Please provide the source code for your solution, including instructions for configuration and running the program.
 
 **Good luck!**
 
