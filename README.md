@@ -165,8 +165,53 @@ In the [Makefile](/Makefile) I include a lot of different commands:
 3. Communicating between running requests for graceful shutdown
 4. Make writing to DB and Kafka in goro [not 100% sure]
 5. Move generating UUID for models inside DB and return this value back to APP [Currently the ID is generated in Repository]
+6. Move some validation to model methods: something like `isValidEmail`
+
+```golang
+func (f *Feedback) IsValidEmail() bool {
+    if f.Email == "" && isValidEmail(f.Email)  {
+          return true
+    }
+    return false
+}
+```
 
 ## Issues
 
 If we are running the Docker Compose, we can see that the Go Web Server try to connect to not-ready DB.
 I tried to fix it with [this shell/bash script](https://github.com/vishnubob/wait-for-it/) but not successful.
+
+### Potential fix
+
+We can use the mechanism is commonly known as "database connection retry"
+
+Small code example (haven't included into project until I'll got review from employer):
+
+```golang
+db, err := sql.Open("mysql", "user:password@tcp(dbhost:3306)/dbname")
+
+// Retry connecting to the database up to 5 times with a delay of 5 seconds between each attempt
+for i := 0; i < 5; i++ {
+    if err != nil {
+        fmt.Printf("Error connecting to database: %v\n", err)
+        time.Sleep(5 * time.Second)
+        db, err = sql.Open("mysql", "user:password@tcp(dbhost:3306)/dbname")
+    } else {
+        break
+    }
+}
+
+if err != nil {
+    panic("Failed to connect to database after multiple attempts")
+}
+
+// DO next business logic
+```
+
+## CODE REVIEW from employer
+
+I'll write until I'll got review from employer
+
+## CODE REVIEW from Golang community
+
+I'll write until I'll got review from employer
