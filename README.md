@@ -1,50 +1,217 @@
 # Feedback service
 
-## Опис завдання
+## Task Description
 
-Ваше завдання — створити простий мікросервіс для обробки даних відгуків клієнтів. Мікросервіс відповідатиме за управління відгуками клієнтів, зберігання їх у базі даних PostgreSQL і публікацію в темі Kafka. Крім того, мікросервіс реалізує кешування за допомогою Memcached для підвищення продуктивності.
+Your task is to create a simple microservice for processing customer feedback data. The microservice will be responsible for managing customer feedback, storing it in a PostgreSQL database, and publishing it to a Kafka topic. Additionally, the microservice implements caching using Memcached to improve performance.
 
-### Вимоги
+### Requirements
 
-1. Створіть мікросервіс Go з такими кінцевими точками:
+1. Create a Go microservice with the following endpoints:
 
-   * POST /feedback: дозволяє користувачеві надіслати новий елемент відгуку. Кінцева точка має приймати JSON у такому форматі:
+   * ✅ POST /feedback: allows the user to submit a new feedback item. The endpoint should accept JSON in the following format:
 
    ```json
    {
-    "customer_name": "Джон Доу",
-    "email": "johndoe@example.com",
-    "feedback_text": "Важливо вчитися у пацієнта, щоб клієнт слідував за вами.",
-    "source": "Веб-сайт"
+      "customer_name": "Andrii Derkach",
+      "email": "andrsj.derkach@gmail.com",
+      "feedback_text": "It's a really good test task.",
+      "source": "https://t.me/andrsj"
    }
    ```
 
-   > Мікросервіс має перевірити вхідні дані, створити унікальний ідентифікатор для елемента відгуку, зберегти елемент у базі даних PostgreSQL і опублікувати його в темі Kafka.
+   > ✅ The microservice should validate the input data, create a unique identifier for the feedback item, save the item in the PostgreSQL database, and publish it to the Kafka topic.
 
-   * GET /feedback/{id}: дозволяє користувачеві отримати певний елемент відгуку за його ідентифікатором. Мікросервіс повинен спочатку перевірити кеш Memcached для елемента. Якщо елемента немає в кеші, він повинен отримати його з бази даних PostgreSQL і зберегти в кеші для майбутніх запитів.
+   * ✅ GET /feedback/{id}: allows the user to retrieve a specific feedback item by its identifier. The microservice should first check the Memcached cache for the item. If the item is not in the cache, it should retrieve it from the PostgreSQL database and store it in the cache for future requests.
 
-2. Використовуйте наступний стек технологій: ( ! якщо він потрібен для реалізації завдання):
-   * Go
-   * PostgreSQL для зберігання даних
-   * Кафка для публікації повідомлень
-   * Memcached для кешування
-   * ~~JavaScript і React для інтерфейсу~~
-   * Зв'язок мікросервісу через HTTP
-   * JWT для автентифікації
+2. Use the following technology stack: (if needed for the task):
+   * ✅ Go
+   * ✅ PostgreSQL for data storage
+   * ✅ Kafka for message publishing
+   * ✅ Memcached for caching
+   * ❌ JavaScript and React for the interface
+   * ✅ Microservice communication via HTTP
+   * ✅ JWT for authentication
 
-3. Мікросервіс повинен повертати відповідні повідомлення про помилки, якщо кінцева точка використовується неправильно або якщо є проблеми з даними.
+3. ✅ The microservice should return appropriate error messages if the endpoint is used incorrectly or if there are issues with the data.
 
-4. Ви повинні використовувати будь-які відповідні бібліотеки або фреймворки, які вам зручні.
+4. ✅ You should use any relevant libraries or frameworks that are convenient for you.
 
-### Бонусні бали
+### Bonus points
 
-* Застосуйте розбиття на сторінки для /feedback кінцевої точки, щоб обмежити кількість отриманих результатів.
-* Додайте модульні тести для кінцевих точок мікросервісу.
-* Реалізуйте автентифікацію та авторизацію за допомогою JWT.
-* Використовуйте Docker для контейнеризації мікросервісу.
+* ✅ Implement pagination for the /feedback endpoint to limit the number of results returned.
+* ❌ Add unit tests for the microservice endpoints.
+* ✅ Implement authentication and authorization using JWT.
+* ✅ Use Docker to containerize the microservice.
 
-### Подання
+### Submission
 
-Будь ласка, надайте вихідний код для вашого рішення, включаючи інструкції з налаштування та запуску програми.
+✅ Please provide the source code for your solution, including instructions for configuration and running the program.
 
-Goooood luck!
+**Good luck!**
+
+## Solution
+
+### Endpoints
+
+* `GET /` - Status code 200 for verify the viability of server
+
+![Status output](/img/status.png)
+
+---
+
+* `GET /token?minutes=10&role=all` - Generator of JSON Web Tokens
+  * minutes:
+    * int
+    * default = 10
+  * role:
+    * string
+    * available: `get`, `post`, `all`
+
+Text | Image
+---- | -----
+Input for generating JWT | ![Token input](/img/tokenInput.png)
+JWT Response | ![Token result](/img/token.png)
+Invalid value | `{"error": "error while checking minutes: wrong value for minutes param '-500': invalid minutes parameter"}`
+Invalid role | `{"error": "error while checking role: wrong role 'none': invalid role parameter"}`
+
+---
+JWT Errors:
+
+Errors | Messages
+------ | -----
+Invalid JWT | `{"error": "wrong token authorization: parsing error: token is malformed: could not JSON decode header: invalid character 'ÿ' looking for beginning of value"}`
+Wrong access role | `{"error": "validating token error: validating 'role' error: wrong role for 'POST': token has wrong role"}`
+Token Expired | `{"error": "validating token error: validating 'expiredAt' error: expired (122): token is expired"}`
+
+---
+
+* `GET /feedbacks` - GET all feedbacks from DB [No cache, no paginated values]
+
+Text | Image
+---- | -----
+Response for GET | ![Response for GET /feedbacks](/img/GETallFeedbacks.png)
+
+---
+
+* `GET /feedback/{id}` - GET one specific feedback by ID
+  * id - UUID string (that parsed into `uuid.UUID`)
+
+Text | Image
+---- | -----
+Input/Output | ![GET Headers input](/img/GETidFeedback.png)
+Output/Headers no cached | ![GET Header output NoCache](/img/GETidFeedback2.png)
+Output/Headers cached | ![GET Header output WithCache](/img/GETidFeedback3.png)
+Wrong format ID | `{"error": "can't parse the ID: invalid UUID length: 35"}`
+Invalid character | `{"error": "can't parse the ID: invalid UUID format"}`
+Missing ID | `{"error": "getting by ID: failed to get feedback from DB: record not found"}`
+
+---
+
+* `GET /p-feedbacks?limit=10&next=""` - Paginated version of `/feedbacks`
+  * limit:
+    * int
+    * EXPECTED > 0
+  * next:
+    * string
+    * **NEED TO BE IN UUID format**
+
+Text | Image
+---- | -----
+Output| ![Response](/img/GETpFeedbacks.png)
+Headers | ![Response headers](/img/GETpFeedbacks2.png)
+Next request/response | ![Middle request/response](/img/GETpFeedbacks3.png)
+
+Error | Message
+----- | -------
+Wrong type of limit | `{"error":"error while check limit: wrong limit param 'a': invalid limit parameter"}`
+Wrong limit value | `{"error":"error while check limit: wrong limit param '-1 < 0': invalid limit parameter"}`
+Wrong format of next | `{"error":"error while check next: wrong format of next ID: invalid next parameter"}`
+No values after next | `{"error": "next 'b7970cbb-0a70-41bb-99d7-52ec3884d3d5': no values after 'next'"}`
+
+---
+
+* `POST /feedback` - CREATE one feedback
+
+Text | Image
+---- | -----
+Body | ![Body of request](/img/POSTinput.png)
+Headers | ![Headers of request](/img/POSTinput2.png)
+Output | ![Response](/img/POSToutput.png)
+Invalid email (no @ for example) | `{"error": "validating feedback error: invalid email address"}`
+Invalid source URL (no protocol for example) | `{"error": "validating feedback error: invalid source URL"}`
+
+---
+
+* `/l?time=0` - Just a handler that sleep, used to test "graceful shutdown" (actually a timeout signal interrupt)
+
+## How to run?
+
+In the [Makefile](/Makefile) I include a lot of different commands:
+
+* `make build` - build app on local machine
+* `make brun` - build and run on local machine
+* `make db-up | kafka-up | cache-up` - app separate service
+* `make consumer` - CLI consumer for TOPIC that used for producing in App
+* `make up` - Start whole dockerize project
+* `make down` - Stop it
+* `make go` - rerun Go app container without rebuild
+* `make bgo` - rebuild and run Docker image for Go app
+* e.t.c.
+
+## Suggestions for improvement
+
+1. Unit tests! Integration tests! E2E tests! No manual testing!
+2. More effective error handling [no wrapped messages]
+3. Communicating between running requests for graceful shutdown
+4. Make writing to DB and Kafka in goro [not 100% sure]
+5. Move generating UUID for models inside DB and return this value back to APP [Currently the ID is generated in Repository]
+6. Move some validation to model methods: something like `isValidEmail`
+
+```golang
+func (f *Feedback) IsValidEmail() bool {
+    if f.Email == "" && isValidEmail(f.Email)  {
+          return true
+    }
+    return false
+}
+```
+
+## Issues
+
+If we are running the Docker Compose, we can see that the Go Web Server try to connect to not-ready DB.
+I tried to fix it with [this shell/bash script](https://github.com/vishnubob/wait-for-it/) but not successful.
+
+### Potential fix
+
+We can use the mechanism is commonly known as "database connection retry"
+
+Small code example (haven't included into project until I'll got review from employer):
+
+```golang
+db, err := sql.Open("mysql", "user:password@tcp(dbhost:3306)/dbname")
+
+// Retry connecting to the database up to 5 times with a delay of 5 seconds between each attempt
+for i := 0; i < 5; i++ {
+    if err != nil {
+        fmt.Printf("Error connecting to database: %v\n", err)
+        time.Sleep(5 * time.Second)
+        db, err = sql.Open("mysql", "user:password@tcp(dbhost:3306)/dbname")
+    } else {
+        break
+    }
+}
+
+if err != nil {
+    panic("Failed to connect to database after multiple attempts")
+}
+
+// DO next business logic
+```
+
+## CODE REVIEW from employer
+
+I'll write until I'll got review from employer
+
+## CODE REVIEW from Golang community
+
+I'll write until I'll got review from employer

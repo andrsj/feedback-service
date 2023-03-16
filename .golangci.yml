@@ -1,0 +1,26 @@
+linters:
+  enable-all: true
+  disable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golint
+
+issues:
+  exclude:
+    - use of internal package
+    - parameter name 'w|r' is too short for the scope of its usage
+
+  exclude-rules:
+    linters:
+      - ireturn
+    text: Named returns interface
+
+run:
+  timeout: 2m
+  issues-exit-code: 0
+  go: '1.19.7'
+
+output:
+  uniq-by-line: false
