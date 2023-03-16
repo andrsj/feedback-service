@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-
 )
 
 // ChatGPT's generated package for handling Response for Cache Middleware
@@ -37,6 +36,7 @@ func (rw *ResponseWriter) Write(b []byte) (int, error) {
 }
 
 // `interfacer` says that http.ResponseWrite can be replaced by io.Writer.
+//
 //nolint:interfacer
 func (rw *ResponseWriter) WriteTo(w http.ResponseWriter) error {
 	_, err := w.Write(rw.Body.Bytes())

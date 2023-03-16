@@ -52,17 +52,17 @@ func (r *Router) Register(handler Handlers) {
 
 	// Status checker.
 	r.router.Get("/", handler.Status)
-	
+
 	// Token generation.
 	r.router.Get("/token", handler.Token)
-	
+
 	// No cache all feedbacks.
 	r.router.With(r.jwtMiddleware).Get("/feedbacks", handler.GetAllFeedback)
 	r.router.Group(
 		func(router chi.Router) {
 			router.Use(r.cacheMiddleware)
 			router.Use(r.jwtMiddleware)
-			
+
 			// Specific ID.
 			router.Get("/feedback/{id}", handler.GetFeedback)
 			// Paginated cursor list of feedbacks.

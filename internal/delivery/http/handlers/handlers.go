@@ -56,10 +56,10 @@ func (h *Handlers) FakeLongWork(w http.ResponseWriter, r *http.Request) {
 	sleepTime, err := strconv.Atoi(queryValues.Get("time"))
 	if err != nil || sleepTime <= 0 {
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Invalid time value"}) //nolint:errchkjson
-		
+
 		return
 	}
-	
+
 	time.Sleep(time.Duration(sleepTime) * time.Second)
 	w.Write([]byte("Ok")) //nolint:errcheck
 }

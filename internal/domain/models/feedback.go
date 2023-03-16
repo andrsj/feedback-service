@@ -15,7 +15,7 @@ type FeedbackInput struct {
 }
 
 type Feedback struct {
-	ID           uuid.UUID    `json:"id" gorm:"type:uuid;primaryKey"`
+	ID           uuid.UUID `json:"id" gorm:"type:uuid;primaryKey"`
 	CustomerName string    `json:"customer_name"` //nolint:tagliatelle
 	Email        string    `json:"email"`
 	FeedbackText string    `json:"feedback_text"` //nolint:tagliatelle

@@ -29,7 +29,7 @@ func New(log logger.Logger, addr string, topicName string) (*Producer, error) {
 	config.Producer.Flush.Frequency = frequency * time.Millisecond
 
 	brokers := []string{addr}
-	
+
 	// ChatGPT's generated code for displaying available Topics.
 	// Check list of topics which exist.
 	client, err := sarama.NewClient(brokers, config)
@@ -50,8 +50,8 @@ func New(log logger.Logger, addr string, topicName string) (*Producer, error) {
 	producer, err := sarama.NewSyncProducer(brokers, config)
 	if err != nil {
 		log.Error("Failed to create Kafka producer", logger.M{
-			"err": err,
-			"addr": addr,
+			"err":   err,
+			"addr":  addr,
 			"topic": topicName,
 		})
 

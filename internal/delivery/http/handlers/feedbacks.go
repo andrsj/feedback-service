@@ -29,9 +29,6 @@ var (
 
 // GetFeedback GET /feedback/{id}.
 func (h *Handlers) GetFeedback(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
 	feedbackID := chi.URLParam(r, "id")
 	if feedbackID == "" {
 		h.handleError(w, http.StatusBadRequest, errIDParamIsMissing)
@@ -52,13 +49,13 @@ func (h *Handlers) GetFeedback(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 }
 
 // GetAllFeedback GET /feedbacks.
 func (h *Handlers) GetAllFeedback(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
 	feedbacks, err := h.feedbackService.GetAll()
 	if err != nil {
 		h.handleError(w, http.StatusBadRequest, err)
@@ -72,13 +69,14 @@ func (h *Handlers) GetAllFeedback(w http.ResponseWriter, _ *http.Request) {
 
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 }
 
 // CreateFeedback POST /feedback.
 func (h *Handlers) CreateFeedback(w http.ResponseWriter, r *http.Request) {
 	var feedback models.FeedbackInput
-
-	w.Header().Set("Content-Type", "application/json")
 
 	err := json.NewDecoder(r.Body).Decode(&feedback)
 	if err != nil {
@@ -101,6 +99,7 @@ func (h *Handlers) CreateFeedback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 }
 

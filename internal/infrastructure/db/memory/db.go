@@ -44,9 +44,9 @@ func (r *FeedbackRepository) Create(feedback *models.FeedbackInput) (uuid.UUID, 
 	r.logger.Info("Saving feedback", logger.M{"feedbackID": feedbackID})
 	r.feedbacks[feedbackID.String()] = feedbackOutput
 	r.mu.Unlock()
-	
+
 	r.logger.Info("Returning feedbackID for successfully saved feedback", logger.M{"feedbackID": feedbackID})
-	
+
 	return feedbackID, nil
 }
 
