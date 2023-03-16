@@ -35,8 +35,8 @@ type Params struct {
 	DsnDB            string
 	CacheSecondsLive int32
 	CacheHost        string
-	KafkaHost 		 string
-	KafkaTopic		 string
+	KafkaHost        string
+	KafkaTopic       string
 	Logger           log.Logger
 }
 
@@ -49,7 +49,7 @@ func New(params *Params) (*App, error) {
 		//nolint:exhaustivestruct,exhaustruct
 		&gorm.Config{
 			Logger: gormLogger.Default.LogMode(gormLogger.Info),
-		}, 
+		},
 	)
 	if err != nil {
 		logger.Error("Can't connect to DB", log.M{"err": err, "dsn": params.DsnDB})
@@ -71,7 +71,7 @@ func New(params *Params) (*App, error) {
 		return nil, fmt.Errorf("can't up broker: %w", err)
 	}
 
-	service := feedback.New(feedbackRepo, broker ,logger)
+	service := feedback.New(feedbackRepo, broker, logger)
 	handlers := handlers.New(service, logger)
 
 	cache := memcached.New(params.CacheHost, params.CacheSecondsLive, logger)

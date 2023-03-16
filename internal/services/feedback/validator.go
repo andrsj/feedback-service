@@ -10,7 +10,7 @@ import (
 
 var (
 	errValidEmail = errors.New("invalid email address")
-	errValidURL = errors.New("invalid source URL")
+	errValidURL   = errors.New("invalid source URL")
 
 	regexURL = regexp.MustCompile(`^(https?|ftp)://[^\s/$.?#].[^\s]*$`)
 )

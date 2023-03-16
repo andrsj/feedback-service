@@ -17,7 +17,7 @@ func main() {
 	zap := zap.New()
 
 	var configFile string
-	
+
 	flag.StringVar(&configFile, "c", "", "path to config file (required)")
 	flag.Parse()
 
@@ -63,7 +63,7 @@ func main() {
 	memcachedSecondsLive, err := strconv.Atoi(memcachedSecondsLiveStr)
 
 	zap.Info("Memcached data", log.M{
-		"URL": memcachedHost,
+		"URL":       memcachedHost,
 		"live time": memcachedSecondsLiveStr,
 	})
 
@@ -80,10 +80,10 @@ func main() {
 		kafkaPort,
 	)
 	kafkaTopic := os.Getenv("KAFKA_TOPIC")
-	
+
 	zap.Info("Apache Kafka Configuration", log.M{
-		"host": kafkaHost,
-		"port": kafkaPort,
+		"host":  kafkaHost,
+		"port":  kafkaPort,
 		"topic": kafkaTopic,
 	})
 

@@ -27,6 +27,7 @@ type Repository interface {
 
 // Check that actual implementation fits the interface.
 var _ Repository = (*gorm.FeedbackRepository)(nil)
+
 // var _ Repository = (*memory.FeedbackRepository)(nil)
 
 type Producer interface {
